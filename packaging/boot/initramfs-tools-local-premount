@@ -1,0 +1,11 @@
+#!/bin/sh
+# Late mode: load gpu_unlock after local-top (cryptsetup prompt).
+# The decision is taken in init-top/gpu-unlock.
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case $1 in
+prereqs) prereqs; exit 0 ;;
+esac
+[ "$(cat /run/gpu-unlock.mode 2>/dev/null)" = late ] || exit 0
+modprobe -q gpu_unlock || true
+exit 0

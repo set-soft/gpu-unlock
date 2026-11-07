@@ -1,10 +1,44 @@
 #!/bin/sh
-# Load gpu_unlock before init-top/udev starts the coldplug, which would
-# load nvidia for the card first; modules.d only loads it after that. It
-# does nothing unless gpu_unlock.targets= is on the kernel command line.
+# Decide when gpu_unlock is loaded, once per boot, and record the decision
+# in /run/gpu-unlock.mode for local-premount/gpu-unlock.
+#
+#   gpu_unlock_late=0|no   kernel cmdline: load now (init-top, "early")
+#   gpu_unlock_late=1|yes  kernel cmdline: load after the cryptsetup prompt
+#   (absent)               auto: "early" if nvidia modules are in this
+#                          initramfs (udev coldplug would load nvidia first,
+#                          so we must win the race; logs a warning),
+#                          otherwise "late".
+#
+# gpu_unlock itself does nothing unless gpu_unlock.targets= is on the
+# kernel command line.
 PREREQ=""
 prereqs() { echo "$PREREQ"; }
 case $1 in
 prereqs) prereqs; exit 0 ;;
 esac
-modprobe -q gpu_unlock || true
+
+klog() { echo "<$1>gpu-unlock: $2" > /dev/kmsg 2>/dev/null || true; }
+
+mode=auto
+for x in $(cat /proc/cmdline); do
+	case $x in
+	gpu_unlock_late=1|gpu_unlock_late=yes) mode=late ;;
+	gpu_unlock_late=0|gpu_unlock_late=no) mode=early ;;
+	esac
+done
+
+if [ "$mode" = auto ]; then
+	if [ -n "$(find /usr/lib/modules /lib/modules -name 'nvidia*.ko*' 2>/dev/null)" ]; then
+		mode=early
+		klog 4 "nvidia modules found in the initramfs: loading early (legacy mode). Video is lost before the cryptsetup prompt, and resume from hibernation fails with NVreg_PreserveVideoMemoryAllocations=1. Remove nvidia from the initramfs, or set gpu_unlock_late=0 to silence this."
+	else
+		mode=late
+	fi
+fi
+
+echo "$mode" > /run/gpu-unlock.mode
+klog 6 "mode=$mode"
+if [ "$mode" = early ]; then
+	modprobe -q gpu_unlock || true
+fi
+exit 0

@@ -78,8 +78,10 @@ install-mkinitcpio:
 	install -Dm644 packaging/boot/mkinitcpio.conf $(DESTDIR)/etc/mkinitcpio.conf.d/zz-gpu-unlock.conf
 
 install-initramfs-tools:
-	install -Dm644 packaging/boot/initramfs-tools.conf \
-		$(DESTDIR)/usr/share/initramfs-tools/modules.d/gpu-unlock.conf
+	install -Dm755 packaging/boot/initramfs-tools-hook \
+		$(DESTDIR)/usr/share/initramfs-tools/hooks/gpu-unlock
+	install -Dm755 packaging/boot/initramfs-tools-local-premount \
+		$(DESTDIR)/usr/share/initramfs-tools/scripts/local-premount/gpu-unlock
 	install -Dm755 packaging/boot/initramfs-tools-init-top \
 		$(DESTDIR)/usr/share/initramfs-tools/scripts/init-top/gpu-unlock
 

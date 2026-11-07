@@ -6,6 +6,13 @@
 
 **Up to 2× FP16 / BF16 / TF32 tensor throughput** · **+25–55% LLM prefill** · **+25–50% fine-tuning** · **+30–55% image generation**
 
+> [!NOTE]
+> This fork solves the problem you face when you have encrypted volumes and you have to enter the passphrase while the video is reset by `gpu-unlock`
+> Only the Debian package is tested, and not for dracut, just plain mechanism.
+> Make sure you have `nvidia-drm.modeset=1` in your `/etc/default/grub` (i.e `quiet  nvidia-drm.modeset=1 gpu_unlock.targets=all`)
+> Make sure the NVidia modules *aren't* in the initramfs, otherwise the hibernate will fail.
+
+
 [Supported GPUs](#supported-gpus) · [Benchmarks](#what-you-get) · [Install](#how-to-install) · [FAQ](#faq) · [Support](#support-me)
 
 ---

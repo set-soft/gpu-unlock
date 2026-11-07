@@ -1,0 +1,12 @@
+#!/bin/sh
+# Put gpu_unlock.ko in the initramfs WITHOUT adding it to /conf/modules
+# (which would load it before the cryptsetup prompt). When to load it is
+# decided at boot by init-top/gpu-unlock.
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case $1 in
+prereqs) prereqs; exit 0 ;;
+esac
+. /usr/share/initramfs-tools/hook-functions
+manual_add_modules gpu_unlock
+exit 0
